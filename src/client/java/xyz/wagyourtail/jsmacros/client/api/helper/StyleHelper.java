@@ -129,7 +129,7 @@ public class StyleHelper extends BaseHelper<Style> {
             return null;
         }
         if (base.getClickEvent() instanceof CustomClickEvent) {
-            return ((CustomClickEvent) base.getClickEvent()).getEvent();
+            return ((CustomClickEvent) base.getClickEvent()).event();
         }
         return null;
     }

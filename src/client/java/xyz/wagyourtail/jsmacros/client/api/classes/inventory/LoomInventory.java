@@ -3,13 +3,15 @@ package xyz.wagyourtail.jsmacros.client.api.classes.inventory;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.block.entity.BannerPattern;
 import net.minecraft.client.gui.screen.ingame.LoomScreen;
+#if MCV >= 12105
+import net.minecraft.component.DataComponentTypes;
+#else
 import net.minecraft.item.BannerPatternItem;
+#endif
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.registry.tag.BannerPatternTags;
 import xyz.wagyourtail.jsmacros.client.access.ILoomScreen;
 
@@ -30,15 +32,23 @@ public class LoomInventory extends Inventory<LoomScreen> {
 
     private List<RegistryEntry<BannerPattern>> getPatternsFor(ItemStack stack) {
         if (stack.isEmpty()) {
-            return (List)mc.getNetworkHandler().getRegistryManager().getOrThrow(RegistryKeys.BANNER_PATTERN).getOptional(BannerPatternTags.NO_ITEM_REQUIRED).map(ImmutableList::copyOf).orElse(ImmutableList.of());
+            return mc.getNetworkHandler().getRegistryManager().getOrThrow(RegistryKeys.BANNER_PATTERN).getOptional(BannerPatternTags.NO_ITEM_REQUIRED).map(ImmutableList::copyOf).orElse(ImmutableList.of());
         } else {
+            #if MCV >= 12105
+            if (!stack.getComponents().contains(DataComponentTypes.PROVIDES_BANNER_PATTERNS)) {
+                return List.of();
+            }
+            var pattern = stack.get(DataComponentTypes.PROVIDES_BANNER_PATTERNS);
+            return mc.getNetworkHandler().getRegistryManager().getOrThrow(RegistryKeys.BANNER_PATTERN).getOptional(pattern).map(ImmutableList::copyOf).orElse(ImmutableList.of());
+            #else
             Item var3 = stack.getItem();
             if (var3 instanceof BannerPatternItem) {
                 BannerPatternItem bannerPatternItem = (BannerPatternItem)var3;
-                return (List)mc.getNetworkHandler().getRegistryManager().getOrThrow(RegistryKeys.BANNER_PATTERN).getOptional(bannerPatternItem.getPattern()).map(ImmutableList::copyOf).orElse(ImmutableList.of());
+                return mc.getNetworkHandler().getRegistryManager().getOrThrow(RegistryKeys.BANNER_PATTERN).getOptional(bannerPatternItem.getPattern()).map(ImmutableList::copyOf).orElse(ImmutableList.of());
             } else {
                 return List.of();
             }
+            #endif
         }
     }
 

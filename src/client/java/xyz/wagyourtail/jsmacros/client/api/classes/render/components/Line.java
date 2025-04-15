@@ -1,6 +1,7 @@
 package xyz.wagyourtail.jsmacros.client.api.classes.render.components;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gl.ShaderProgramKey;
 import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.gui.DrawContext;

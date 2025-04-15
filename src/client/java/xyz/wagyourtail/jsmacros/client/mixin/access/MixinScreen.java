@@ -1023,7 +1023,7 @@ public abstract class MixinScreen extends AbstractParentElement implements IScre
     public void handleCustomClickEvent(Style style, CallbackInfoReturnable<Boolean> cir) {
         ClickEvent clickEvent = style.getClickEvent();
         if (clickEvent instanceof CustomClickEvent) {
-            ((CustomClickEvent) clickEvent).getEvent().run();
+            ((CustomClickEvent) clickEvent).event().run();
             cir.setReturnValue(true);
             cir.cancel();
         }

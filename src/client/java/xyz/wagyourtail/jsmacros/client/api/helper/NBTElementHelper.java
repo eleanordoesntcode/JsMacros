@@ -180,7 +180,7 @@ public class NBTElementHelper<T extends NbtElement> extends BaseHelper<T> {
             case NbtElement.LIST_TYPE: //9
             case NbtElement.INT_ARRAY_TYPE: //11
             case NbtElement.LONG_ARRAY_TYPE: //12
-                return new NBTListHelper((AbstractNbtList<?>) element);
+                return new NBTListHelper((AbstractNbtList) element);
             case NbtElement.COMPOUND_TYPE: //10
                 return new NBTCompoundHelper((NbtCompound) element);
             case NbtElement.STRING_TYPE: //8
@@ -251,9 +251,13 @@ public class NBTElementHelper<T extends NbtElement> extends BaseHelper<T> {
     /**
      * @since 1.5.1
      */
-    public static class NBTListHelper extends NBTElementHelper<AbstractNbtList<?>> {
+    public static class NBTListHelper extends NBTElementHelper<AbstractNbtList
+        #if MCV < 12105
+        <?>
+        #endif
+    > {
 
-        public NBTListHelper(AbstractNbtList<?> base) {
+        public NBTListHelper(AbstractNbtList base) {
             super(base);
         }
 

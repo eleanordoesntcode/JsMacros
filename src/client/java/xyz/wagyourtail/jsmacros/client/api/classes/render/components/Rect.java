@@ -1,8 +1,11 @@
 package xyz.wagyourtail.jsmacros.client.api.classes.render.components;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gl.ShaderProgramKey;
+#if MCV >= 12105
+import com.mojang.blaze3d.vertex.VertexFormat;
+#else
 import net.minecraft.client.gl.ShaderProgramKeys;
+#endif
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
@@ -324,9 +327,13 @@ public class Rect implements RenderElement, Alignable<Rect> {
         float fg = ((color >> 8) & 0xFF) / 255F;
         float fb = (color & 0xFF) / 255F;
 
+        #if MCV >= 12105
+
+        #else
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
+        #endif
 
         BufferBuilder buf = tess.begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
         Matrix4f matrix = matrices.peek().getPositionMatrix();

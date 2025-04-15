@@ -35,3 +35,4 @@ doc/
 
 
 docs/web/[0-9]*
+build.properties
