@@ -29,7 +29,6 @@ java {
 repositories {
     maven("https://maven.fabricmc.net/")
     maven("https://maven.terraformersmc.com/releases/")
-    maven("https://files.minecraftforge.net/maven/")
     maven("https://jitpack.io")
     mavenCentral()
 }
@@ -43,12 +42,6 @@ val client by sourceSets.creating {
     compileClasspath += core.output + core.compileClasspath + sourceSets.main.get().output
     runtimeClasspath += core.output + core.runtimeClasspath + sourceSets.main.get().output
 }
-
-val forge by sourceSets.creating {
-    compileClasspath += core.output + core.compileClasspath + sourceSets.main.get().output + client.output
-    runtimeClasspath += core.output + core.runtimeClasspath + sourceSets.main.get().output + client.output
-}
-
 val fabric by sourceSets.creating {
     compileClasspath += core.output + core.compileClasspath + sourceSets.main.get().output + client.output
     runtimeClasspath += core.output + core.runtimeClasspath + sourceSets.main.get().output + client.output
@@ -95,26 +88,6 @@ unimined.minecraft(client) {
     side("joined")
 }
 
-unimined.minecraft(forge) {
-    combineWith(":main")
-    side("joined")
-
-    minecraftRemapper.config {
-        ignoreConflicts(true)
-    }
-
-    neoForge {
-        loader(libs.versions.neoforge.get())
-        accessTransformer(aw2at(file("src/main/resources/jsmacros.accesswidener")))
-
-        mixinConfig = listOf(
-            "jsmacros-forge.mixins.json",
-            "jsmacros-client.mixins.json",
-            "jsmacros-common.mixins.json",
-        )
-    }
-}
-
 unimined.minecraft(fabric) {
     combineWith(":main")
     side("joined")
@@ -132,7 +105,6 @@ configurations.implementation.configure {
 
 val minecraftLibraries by configurations.getting
 val jsmacrosExtensionInclude by configurations.creating
-val shadowForge by configurations.creating
 
 val clientCompileOnly by configurations.getting {
     extendsFrom(configurations.compileOnly.get())
@@ -148,8 +120,6 @@ dependencies {
     val fabricModImplementation by configurations.getting
     val fabricInclude by configurations.getting
     val fabricRuntimeOnly by configurations.getting
-    val forgeInclude by configurations.getting
-    val forgeRuntimeOnly by configurations.getting
 
     compileOnly(libs.mixin)
     compileOnly(libs.mixin.extra)
@@ -183,24 +153,14 @@ dependencies {
     fabricInclude(libs.javassist)
     fabricInclude(libs.joor)
 
-    forgeInclude(libs.prism4j) {
-        exclude(module = "annotations-java5")
-    }
-    forgeInclude(libs.nv.websocket)
-    forgeInclude(libs.javassist)
-    forgeInclude(libs.joor)
-
-
     for (file in file("extension").listFiles() ?: emptyArray()) {
         if (!file.isDirectory || file.name in listOf("build", "src")) continue
 
         fabricRuntimeOnly(project(":extension:${file.name}"))
-        forgeRuntimeOnly(project(":extension:${file.name}"))
 
         if (file.resolve("subprojects.txt").exists()) {
             for (subproject in file.resolve("subprojects.txt").readLines()) {
                 fabricRuntimeOnly(project(":extension:${file.name}:$subproject"))
-                forgeRuntimeOnly(project(":extension:${file.name}:$subproject"))
             }
         }
     }
@@ -226,57 +186,6 @@ val processCoreResources by tasks.getting(ProcessResources::class) {
 tasks.jar {
     enabled = false
 }
-
-val processForgeResources by tasks.getting(ProcessResources::class) {
-    inputs.property("version", project.version)
-
-    filesMatching("META-INF/neoforge.mods.toml") {
-        expand("version" to project.version)
-    }
-}
-
-
-val forgeJar by tasks.getting(Zip::class) {
-    dependsOn(":extension:graal:jar")
-    dependsOn(":extension:graal:js:jar")
-    archiveClassifier.set("forge-dev")
-    from(forge.output, sourceSets.main.get().output, core.output, client.output)
-
-    isPreserveFileTimestamps = false
-    isReproducibleFileOrder = true
-}
-
-val shadowForgeJar by tasks.registering(ShadowJar::class) {
-    archiveClassifier = "forge-dev-shadow"
-    from(forgeJar)
-
-    // exclude icu that"s "accidentally" (I hope) included in graaljs jar
-    exclude("com/ibm/**")
-
-    mergeServiceFiles()
-
-    configurations = listOf(shadowForge)
-}
-
-val remapForgeJar by tasks.getting(RemapJarTaskImpl::class) {
-    dependsOn(shadowForgeJar)
-    inputFile = shadowForgeJar.get().archiveFile.get().asFile
-
-    from(jsmacrosExtensionInclude.files) {
-        include("*")
-        into("META-INF/jsmacrosdeps")
-    }
-
-    manifest {
-        attributes(
-            "MixinConnector" to "xyz.wagyourtail.jsmacros.forge.client.JsMacrosEarlyRiser",
-        )
-    }
-
-    isPreserveFileTimestamps = false
-    isReproducibleFileOrder = true
-}
-
 val processFabricResources by tasks.getting(ProcessResources::class) {
     inputs.property("version", project.version)
 
